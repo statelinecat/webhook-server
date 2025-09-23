@@ -1,0 +1,107 @@
+"""Конфигурация вебхуков Finandy"""
+
+FINANDY_WEBHOOKS = {
+    "1MBABYDOGEUSDT": "https://hook.finandy.com/TuaL5bAQjTO2kP4trlUK",
+    "1MBABYDOGEUSDTS": "https://hook.finandy.com/09V1WmbUktZCq_8trlUK",
+    "1000CATUSDT": "https://hook.finandy.com/iFh_Ic-r0LeOFkz5rlUK",
+    "1000CATUSDTS": "https://hook.finandy.com/dPpzETmR50zRbU35rlUK",
+    "1000CHEEMSUSDT": "https://hook.finandy.com/oGKYnFSG8EcfFUUXrlUK",
+    "1000CHEEMSUSDTS": "https://hook.finandy.com/qoOE5ObxuJ9fVFoXrlUK",
+    "1000PEPEUSDT": "https://hook.finandy.com/0O0Famu12xI3IT7ZrlUK",
+    "1000PEPEUSDTS": "https://hook.finandy.com/jmpa1C-AJJB2vD_ZrlUK",
+    "1000RATSUSDT": "https://hook.finandy.com/l8JsSEjNzZd0CTzZrlUK",
+    "1000RATSUSDTS": "https://hook.finandy.com/QcFtY7IJXTyUuD3ZrlUK",
+    "1000SATSUSDT": "https://hook.finandy.com/dMOLd-EEPHPv84ICrlUK",
+    "1000SATSUSDTS": "https://hook.finandy.com/y-ihQVJF3B_TYoMCrlUK",
+    "1000WHYUSDT": "https://hook.finandy.com/vD6Y-C5FcYVTF5clrlUK",
+    "1000WHYUSDTS": "https://hook.finandy.com/HmIQ65EkmnIe0ZQlrlUK",
+    "B3USDT": "https://hook.finandy.com/3BD-SHeKq6e-90P5rlUK",
+    "B3USDTS": "https://hook.finandy.com/mPjmmUyexOLbrkD5rlUK",
+    "BANANAS31USDT": "https://hook.finandy.com/2-mBZ4Wlq8LXvkjyrlUK",
+    "BANANAS31USDTS": "https://hook.finandy.com/XgZw33-Ev83LI0nyrlUK",
+    "BEAMXUSDT": "https://hook.finandy.com/8WdHzLmWBXeiMKQ1rlUK",
+    "BEAMXUSDTS": "https://hook.finandy.com/2GJI0BxNg1tMpqU1rlUK",
+    "BOMEUSDT": "https://hook.finandy.com/3Z-yX4GNQeM4qPACrlUK",
+    "BOMEUSDTS": "https://hook.finandy.com/_QAms23yOJcA7fECrlUK",
+    "BROCCOLIF3BUSDT": "https://hook.finandy.com/w-SfCLt30P5Z9IL4rlUK",
+    "BROCCOLIF3BUSDTS": "https://hook.finandy.com/8_YNXd82OWD4y4P4trlUK",
+    "CELRUSDT": "https://hook.finandy.com/E2q8PleUx0Clrjn-rlUK",
+    "CELRUSDTS": "https://hook.finandy.com/oYAmmkFkTKq5cz7-rlUK",
+    "CKBUSDT": "https://hook.finandy.com/mKHiVM5w3QCqJ0f5rlUK",
+    "CKBUSDTS": "https://hook.finandy.com/b4zcdlFQlxDkSUT5rlUK",
+    "COSUSDT": "https://hook.finandy.com/73omqoO70CTVXvwtrlUK",
+    "COSUSDTS": "https://hook.finandy.com/WtiT7uH62Cjicv0trlUK",
+    "DEGENUSDT": "https://hook.finandy.com/ZoBsmeXKzXHw3zDerlUK",
+    "DEGENUSDTS": "https://hook.finandy.com/g4V2H5Kj6ng4gTHerlUK",
+    "DENTUSDT": "https://hook.finandy.com/0WRavvY9biMkgPMtrlUK",
+    "DENTUSDTS": "https://hook.finandy.com/ISVXOhtIabW3lfAtrlUK",
+    "DMCUSDT": "https://hook.finandy.com/L0m_xYpcNeUuQYH4rlUK",
+    "DMCUSDTS": "https://hook.finandy.com/LMXJJ72EFfoE4Ib4rlUK",
+    "DOGSUSDT": "https://hook.finandy.com/mxgs6_cHVKKbY8YhrlUK",
+    "DOGSUSDTS": "https://hook.finandy.com/rOo7l98bSAg0WschrlUK",
+    "DOODUSDT": "https://hook.finandy.com/78octjd6rqzYLjL-rlUK",
+    "DOODUSDTS": "https://hook.finandy.com/AuBB1OrOASJHQjP-rlUK",
+    "EPTUSDT": "https://hook.finandy.com/ptmBF5EjFn4mqTX8rlUK",
+    "EPTUSDTS": "https://hook.finandy.com/tY3hP1Si-ndJ6gr8rlUK",
+    "FUNUSDT": "https://hook.finandy.com/FIUiR1IcxvWXg-74rlUK",
+    "FUNUSDTS": "https://hook.finandy.com/WeGAwI45NLdRIuz4rlUK",
+    "FUSDT": "https://hook.finandy.com/XXXXXXXXXXXXXXX",
+    "FUSDTS": "https://hook.finandy.com/XXXXXXXXXXXXXXX",
+    "HIPPOUSDT": "https://hook.finandy.com/3-VIPLYwTT_XtY7_rlUK",
+    "HIPPOUSDTS": "https://hook.finandy.com/6gIuSVhToG1QZ4__rlUK",
+    "HMSTRUSDT": "https://hook.finandy.com/C_Exh3VRAtItxcIKrlUK",
+    "HMSTRUSDTS": "https://hook.finandy.com/ASzznQdKSKvTm8MKrlUK",
+    "HOTUSDT": "https://hook.finandy.com/Qd9tI_oAai-O6yYgrlUK",
+    "HOTUSDTS": "https://hook.finandy.com/6amhMUdQG3laMCcgrlUK",
+    "IOSTUSDT": "https://hook.finandy.com/TbocZZQl062XLMcCrlUK",
+    "IOSTUSDTS": "https://hook.finandy.com/kFrYgZyWL14zqsQCrlUK",
+    "LEVERUSDT": "https://hook.finandy.com/XXXXXXXXXXXXXXX",
+    "LEVERUSDTS": "https://hook.finandy.com/XXXXXXXXXXXXXXX",
+    "MEMEUSDT": "https://hook.finandy.com/l_LcerLhBB94_qgWrlUK",
+    "MEMEUSDTS": "https://hook.finandy.com/d9S-G2jUp1coJKkWrlUK",
+    "MEWUSDT": "https://hook.finandy.com/7O15qM2ob8JQKhwNrlUK",
+    "MEWUSDTS": "https://hook.finandy.com/Iglvjwiy5jvnFB0NrlUK",
+    "NEIROUSDT": "https://hook.finandy.com/_03ZicWPN_n1DRs0rlUK",
+    "NEIROUSDTS": "https://hook.finandy.com/9iD3KT2sKOgGdhg0rlUK",
+    "NKNUSDT": "https://hook.finandy.com/P20hv2o1EeOCdVY1rlUK",
+    "NKNUSDTS": "https://hook.finandy.com/hnMDzgChuIMYeVc1rlUK",
+    "NOTUSDT": "https://hook.finandy.com/1cvd7IPoCnv1Ly0BrlUK",
+    "NOTUSDTS": "https://hook.finandy.com/gGyHVX1KYXrmcCcBrlUK",
+    "ONEUSDT": "https://hook.finandy.com/Si6RP6TjxZZUIH75rlUK",
+    "ONEUSDTS": "https://hook.finandy.com/VAs8O2qqa7jfOX_5rlUK",
+    "PUMPUSDT": "https://hook.finandy.com/WXWYMgd52xHsd3__rlUK",
+    "PUMPUSDTS": "https://hook.finandy.com/JUMptnFmcCRHfXz_rlUK",
+    "REZUSDT": "https://hook.finandy.com/XXXXXXXXXXXXXXX",
+    "REZUSDTS": "https://hook.finandy.com/XXXXXXXXXXXXXXX",
+    "RSRUSDT": "https://hook.finandy.com/KNpzFD8q9jwk_rg1rlUK",
+    "RSRUSDTS": "https://hook.finandy.com/fh2GgaLX42ohhLk1rlUK",
+    "SPELLUSDT": "https://hook.finandy.com/G6aXQMYcICy7fj8grlUK",
+    "SPELLUSDTS": "https://hook.finandy.com/P3un26JCdqtnyTwgrlUK",
+    "SWELLUSDT": "https://hook.finandy.com/t7CL16DKN3y4gM7rrlUK",
+    "SWELLUSDTS": "https://hook.finandy.com/YpkjwyP7yHQC_THrrlUK",
+    "TAGUSDT": "https://hook.finandy.com/daUsKIeoxz2QBw0grlUK",
+    "TAGUSDTS": "https://hook.finandy.com/xjlhjmkMp8P6NgIgrlUK",
+    "TLMUSDT": "https://hook.finandy.com/4N-tpFdE0OAl8Qr7rlUK",
+    "TLMUSDTS": "https://hook.finandy.com/TT0qsdmWK7MJgQv7rlUK",
+    "TURBOUSDT": "https://hook.finandy.com/26aJyAfUjChC8fgWrlUK",
+    "TURBOUSDTS": "https://hook.finandy.com/TRY3KwYjRR2JGvkWrlUK",
+    "VTHOUSDT": "https://hook.finandy.com/NwdY1tNyGZQ43f4MrlUK",
+    "VTHOUSDTS": "https://hook.finandy.com/WXyOhFD6o7q_ov8MrlUK",
+    "XVGUSDT": "https://hook.finandy.com/mEE7zt8Dxm1ChQj7rlUK",
+    "XVGUSDTS": "https://hook.finandy.com/eorucMVltQjPNQn7rlUK"
+}
+
+def get_supported_instruments() -> list[str]:
+    """Получить список поддерживаемых инструментов"""
+    return list(FINANDY_WEBHOOKS.keys())
+
+def get_webhook_url(symbol: str) -> str:
+    """Получить URL вебхука для символа"""
+    url = FINANDY_WEBHOOKS.get(symbol)
+    if not url or "PLACEHOLDER" in url or "XXXXXXXX" in url:
+        return f"https://hook.finandy.com/PLACEHOLDER_{symbol}"
+    return url
+
+def is_valid_webhook(url: str) -> bool:
+    """Проверить, является ли вебхук валидным (не заглушкой)"""
+    return url and "PLACEHOLDER" not in url and "XXXXXXXX" not in url

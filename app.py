@@ -14,12 +14,17 @@ DB_PATH = os.getenv("DB_PATH", "signals.db")
 PORT = int(os.getenv("PORT", 8001))
 
 
-# --- Модели для сигналов ---
+# --- Модели для сигналов (ОБНОВЛЕННЫЕ) ---
+class CloseDecrease(BaseModel):
+    type: str
+    amount: str
+
+
 class CloseOrder(BaseModel):
     action: str
-    decrease: Dict[str, Any]
+    decrease: CloseDecrease
     checkProfit: bool
-    price: str
+    price: str = ""
 
 
 class OpenOrder(BaseModel):
@@ -34,18 +39,8 @@ class DCAOrder(BaseModel):
     checkProfit: bool
 
 
-class TPOrder(BaseModel):
-    price: str
-    piece: str
-
-
-class TPConfig(BaseModel):
-    orders: List[TPOrder]
-    update: bool
-
-
 class SLConfig(BaseModel):
-    price: str
+    price: str = ""
     update: bool
 
 
@@ -57,8 +52,8 @@ class TradingSignal(BaseModel):
     close: CloseOrder
     open: OpenOrder
     dca: DCAOrder
-    tp: TPConfig
     sl: SLConfig
+    tp: Optional[Dict[str, Any]] = None
 
 
 # --- Полный список инструментов ---
@@ -134,7 +129,7 @@ FINANDY_WEBHOOKS = {
     "BOMEUSDT": "https://hook.finandy.com/3Z-yX4GNQeM4qPACrlUK",
     "BOMEUSDTS": "https://hook.finandy.com/_QAms23yOJcA7fECrlUK",
     "BROCCOLIF3BUSDT": "https://hook.finandy.com/w-SfCLt30P5Z9IL4rlUK",
-    "BROCCOLIF3BUSDTS": "https://hook.finandy.com/8_YNXd82OWD4y4P4rlUK",
+    "BROCCOLIF3BUSDTS": "https://hook.finandy.com/8_YNXd82OWD4y4P4trlUK",
     "CELRUSDT": "https://hook.finandy.com/E2q8PleUx0Clrjn-rlUK",
     "CELRUSDTS": "https://hook.finandy.com/oYAmmkFkTKq5cz7-rlUK",
     "CKBUSDT": "https://hook.finandy.com/mKHiVM5w3QCqJ0f5rlUK",
@@ -187,8 +182,8 @@ FINANDY_WEBHOOKS = {
     "RSRUSDTS": "https://hook.finandy.com/fh2GgaLX42ohhLk1rlUK",
     "SPELLUSDT": "https://hook.finandy.com/G6aXQMYcICy7fj8grlUK",
     "SPELLUSDTS": "https://hook.finandy.com/P3un26JCdqtnyTwgrlUK",
-    "SWELLUSDT": "https://hook.finandy.com/XXXXXXXXXXXXXXX",
-    "SWELLUSDTS": "https://hook.finandy.com/XXXXXXXXXXXXXXX",
+    "SWELLUSDT": "https://hook.finandy.com/t7CL16DKN3y4gM7rrlUK",
+    "SWELLUSDTS": "https://hook.finandy.com/YpkjwyP7yHQC_THrrlUK",
     "TAGUSDT": "https://hook.finandy.com/daUsKIeoxz2QBw0grlUK",
     "TAGUSDTS": "https://hook.finandy.com/xjlhjmkMp8P6NgIgrlUK",
     "TLMUSDT": "https://hook.finandy.com/4N-tpFdE0OAl8Qr7rlUK",
@@ -219,6 +214,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS signals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             symbol TEXT,
+            name TEXT,
             data TEXT,
             status TEXT,
             created_at REAL,
@@ -231,7 +227,7 @@ def init_db():
     conn.close()
 
 
-def log_signal(symbol: str, data: dict, status: str, created_at: float,
+def log_signal(symbol: str, name: str, data: dict, status: str, created_at: float,
                sent_at: float | None = None, response_code: int = None,
                response_text: str = None):
     """Логирование сигнала в БД"""
@@ -239,9 +235,9 @@ def log_signal(symbol: str, data: dict, status: str, created_at: float,
     cursor = conn.cursor()
     cursor.execute(
         """INSERT INTO signals 
-        (symbol, data, status, created_at, sent_at, response_code, response_text) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (symbol, str(data), status, created_at, sent_at, response_code, response_text)
+        (symbol, name, data, status, created_at, sent_at, response_code, response_text) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (symbol, name, str(data), status, created_at, sent_at, response_code, response_text)
     )
     conn.commit()
     conn.close()
@@ -255,8 +251,8 @@ def get_logs(symbol: str, limit: int = 20):
         cursor.execute("SELECT * FROM signals ORDER BY id DESC LIMIT ?", (limit,))
     else:
         cursor.execute(
-            "SELECT * FROM signals WHERE symbol=? ORDER BY id DESC LIMIT ?",
-            (symbol, limit)
+            "SELECT * FROM signals WHERE symbol=? OR name=? ORDER BY id DESC LIMIT ?",
+            (symbol, symbol, limit)
         )
     rows = cursor.fetchall()
     conn.close()
@@ -267,12 +263,24 @@ def get_logs(symbol: str, limit: int = 20):
 async def worker(symbol: str):
     """Обработка очереди сигналов для конкретного инструмента"""
     last_sent = 0
-    webhook_url = FINANDY_WEBHOOKS[symbol]
 
-    print(f"🚀 Воркер запущен для {symbol} -> {webhook_url}")
+    print(f"🚀 Воркер запущен для {symbol}")
 
     while True:
-        data, created_at = await queues[symbol].get()
+        # Получаем данные сигнала и оригинальные данные (без изменений)
+        data, original_data, name, created_at = await queues[symbol].get()
+
+        # Определяем вебхук на основе name из данных сигнала
+        target_symbol = name  # Используем name для определения вебхука
+        webhook_url = FINANDY_WEBHOOKS.get(target_symbol)
+
+        if not webhook_url:
+            error_msg = f"No webhook found for name: {target_symbol}"
+            print(f"[{symbol}] ❌ {error_msg}")
+            log_signal(symbol, name, original_data, f"error {error_msg}", created_at, None, None, error_msg)
+            queues[symbol].task_done()
+            continue
+
         now = time.time()
 
         # Ограничение 300 мс между запросами
@@ -280,15 +288,27 @@ async def worker(symbol: str):
             await asyncio.sleep(0.3 - (now - last_sent))
 
         try:
+            # Детальное логирование отправляемых данных
+            print(f"\n[{symbol}] 📤 Отправка данных на Finandy:")
+            print(f"[{symbol}] Target symbol from name: {target_symbol}")
+            print(f"[{symbol}] URL: {webhook_url}")
+            print(f"[{symbol}] Оригинальные данные: {original_data}")
+
+            # Отправляем ОРИГИНАЛЬНЫЕ данные без изменений
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     webhook_url,
-                    json=data,
+                    json=original_data,  # Отправляем оригинальные данные
                     timeout=10.0
                 )
 
                 sent_at = time.time()
                 response_text = resp.text[:500]
+
+                # Детальное логирование ответа
+                print(f"[{symbol}] 📥 Ответ от Finandy:")
+                print(f"[{symbol}] Status: {resp.status_code}")
+                print(f"[{symbol}] Response: {response_text}")
 
                 if resp.status_code == 200:
                     status = f"sent {resp.status_code}"
@@ -297,24 +317,25 @@ async def worker(symbol: str):
                     status = f"error {resp.status_code}"
                     print(f"[{symbol}] ⚠️ Ошибка сервера: {resp.status_code}")
 
-                log_signal(symbol, data, status, created_at, sent_at,
+                # Логируем оригинальные данные
+                log_signal(symbol, name, original_data, status, created_at, sent_at,
                            resp.status_code, response_text)
 
-        except httpx.TimeoutException:
-            error_msg = "Timeout"
-            log_signal(symbol, data, f"error {error_msg}", created_at, None,
+        except httpx.TimeoutException as e:
+            error_msg = f"Timeout: {str(e)}"
+            log_signal(symbol, name, original_data, f"error {error_msg}", created_at, None,
                        None, error_msg)
-            print(f"[{symbol}] ❌ Таймаут при отправке")
+            print(f"[{symbol}] ❌ Таймаут при отправке: {e}")
 
         except httpx.RequestError as e:
-            error_msg = str(e)
-            log_signal(symbol, data, f"error {error_msg}", created_at, None,
+            error_msg = f"Request Error: {str(e)}"
+            log_signal(symbol, name, original_data, f"error {error_msg}", created_at, None,
                        None, error_msg)
             print(f"[{symbol}] ❌ Ошибка соединения: {e}")
 
         except Exception as e:
-            error_msg = str(e)
-            log_signal(symbol, data, f"error {error_msg}", created_at, None,
+            error_msg = f"Unexpected Error: {str(e)}"
+            log_signal(symbol, name, original_data, f"error {error_msg}", created_at, None,
                        None, error_msg)
             print(f"[{symbol}] ❌ Неожиданная ошибка: {e}")
 
@@ -346,54 +367,193 @@ app = FastAPI(
 )
 
 
-# --- API Endpoints ---
-@app.post("/webhook/{symbol}", response_model=dict)
-async def webhook(symbol: str, signal: TradingSignal):
+# --- УНИВЕРСАЛЬНЫЙ эндпоинт для всех инструментов ---
+@app.post("/webhook", response_model=dict)
+async def universal_webhook(signal: TradingSignal):
     """
-    Прием сигналов от TradingView
+    Универсальный вебхук для приема сигналов от TradingView
 
-    - **symbol**: Торговый инструмент (например: 1000CATUSDT)
     - **signal**: Данные торгового сигнала в формате Finandy
+    - Автоматически определяет инструмент из поля 'name' сигнала
     """
-    if symbol not in queues:
+    # Используем name из сигнала для определения целевого инструмента
+    target_symbol = signal.name
+
+    if target_symbol not in FINANDY_WEBHOOKS:
         raise HTTPException(
             status_code=404,
-            detail=f"Unknown symbol {symbol}. Supported symbols: {INSTRUMENTS}"
+            detail=f"Unknown target symbol '{target_symbol}'. Supported symbols: {INSTRUMENTS}"
         )
 
-    # Проверяем что symbol в URL совпадает с symbol в данных
-    if signal.symbol != symbol:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Symbol mismatch: URL={symbol}, Data={signal.symbol}"
-        )
+    # Детальная проверка данных
+    print(f"\n📩 Получен сигнал через универсальный вебхук:")
+    print(f"   Target symbol from name: {target_symbol}")
+    print(f"   Side: {signal.side}")
+    print(f"   Full data: {signal.model_dump()}")
 
     created_at = time.time()
-    data = signal.dict()
 
-    # Логируем входящий сигнал
-    log_signal(symbol, data, "received", created_at)
+    # Сохраняем ОРИГИНАЛЬНЫЕ данные без изменений
+    original_data = signal.model_dump()
+
+    # Создаем копию данных для внутренней обработки
+    processed_data = original_data.copy()
+
+    # Логируем входящий сигнал с оригинальными данными
+    log_signal("universal", target_symbol, original_data, "received", created_at)
+
+    # Определяем в какую очередь положить (используем target_symbol)
+    queue_symbol = target_symbol
+    if queue_symbol not in queues:
+        error_msg = f"No queue found for symbol: {target_symbol}"
+        log_signal("universal", target_symbol, original_data, f"error {error_msg}", created_at)
+        raise HTTPException(status_code=400, detail=error_msg)
 
     # Кладем в очередь на отправку
-    await queues[symbol].put((data, created_at))
+    await queues[queue_symbol].put((processed_data, original_data, target_symbol, created_at))
 
-    print(f"[{symbol}] 📩 Принят сигнал: {signal.side.upper()} для {signal.name}")
+    print(f"[{queue_symbol}] 📩 Принят сигнал: {signal.side.upper()} для {target_symbol}")
 
     return {
         "status": "accepted",
-        "symbol": symbol,
+        "target_symbol": target_symbol,
+        "queue_symbol": queue_symbol,
         "queued": True,
-        "webhook": FINANDY_WEBHOOKS[symbol],
+        "webhook": FINANDY_WEBHOOKS[target_symbol],
         "timestamp": created_at
     }
+
+
+# --- Старый эндпоинт (для обратной совместимости) ---
+@app.post("/webhook/{symbol}", response_model=dict)
+async def webhook_with_symbol(symbol: str, signal: TradingSignal):
+    """
+    Вебхук с указанием символа в URL (для обратной совместимости)
+    """
+    # Используем name из сигнала для определения целевого инструмента
+    target_symbol = signal.name
+
+    if target_symbol not in FINANDY_WEBHOOKS:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown target symbol {target_symbol}. Supported symbols: {INSTRUMENTS}"
+        )
+
+    print(f"\n📩 Получен сигнал через вебхук с символом:")
+    print(f"   URL symbol: {symbol}")
+    print(f"   Target symbol from name: {target_symbol}")
+    print(f"   Side: {signal.side}")
+
+    created_at = time.time()
+    original_data = signal.model_dump()
+    processed_data = original_data.copy()
+
+    log_signal(symbol, target_symbol, original_data, "received", created_at)
+
+    queue_symbol = target_symbol
+    if queue_symbol not in queues:
+        queue_symbol = symbol
+        print(f"⚠️ Очередь для {target_symbol} не найдена, используем {symbol}")
+
+    await queues[queue_symbol].put((processed_data, original_data, target_symbol, created_at))
+
+    print(f"[{queue_symbol}] 📩 Принят сигнал: {signal.side.upper()} для {target_symbol}")
+
+    return {
+        "status": "accepted",
+        "url_symbol": symbol,
+        "target_symbol": target_symbol,
+        "queue_symbol": queue_symbol,
+        "queued": True,
+        "webhook": FINANDY_WEBHOOKS[target_symbol],
+        "timestamp": created_at
+    }
+
+
+# Остальные эндпоинты остаются без изменений...
+@app.post("/test-webhook/{symbol}")
+async def test_webhook(symbol: str):
+    """Тестовый запрос к Finandy для проверки соединения"""
+    if symbol not in FINANDY_WEBHOOKS:
+        return {"error": "Symbol not found"}
+
+    webhook_url = FINANDY_WEBHOOKS[symbol]
+
+    if "PLACEHOLDER" in webhook_url or "XXXXXXXX" in webhook_url:
+        return {"error": "Webhook URL is a placeholder", "url": webhook_url}
+
+    test_data = {
+        "name": symbol,
+        "secret": "test_secret",
+        "symbol": symbol,
+        "side": "buy",
+        "open": {
+            "enabled": True,
+            "amountType": "sumUsd",
+            "amount": "6"
+        },
+        "dca": {
+            "amountType": "sumUsd",
+            "amount": "6",
+            "checkProfit": False
+        },
+        "close": {
+            "price": "",
+            "action": "decrease",
+            "decrease": {
+                "type": "posAmountPct",
+                "amount": "1"
+            },
+            "checkProfit": True
+        },
+        "sl": {
+            "price": "",
+            "update": False
+        }
+    }
+
+    try:
+        print(f"\n🧪 Тестовый запрос для {symbol}:")
+        print(f"URL: {webhook_url}")
+        print(f"Данные: {test_data}")
+
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(webhook_url, json=test_data, timeout=10.0)
+
+            result = {
+                "status_code": resp.status_code,
+                "response": resp.text[:500],
+                "url": webhook_url,
+                "success": resp.status_code == 200
+            }
+
+            print(f"Результат: {result}")
+            return result
+
+    except Exception as e:
+        error_result = {"error": str(e), "url": webhook_url}
+        print(f"Ошибка теста: {error_result}")
+        return error_result
 
 
 @app.get("/webhooks", response_model=dict)
 async def list_webhooks():
     """Получить список всех вебхуков"""
+    valid_webhooks = {}
+    placeholder_webhooks = {}
+
+    for symbol, url in FINANDY_WEBHOOKS.items():
+        if "PLACEHOLDER" in url or "XXXXXXXX" in url:
+            placeholder_webhooks[symbol] = url
+        else:
+            valid_webhooks[symbol] = url
+
     return {
         "total_instruments": len(INSTRUMENTS),
-        "webhooks": {symbol: FINANDY_WEBHOOKS[symbol] for symbol in INSTRUMENTS}
+        "valid_webhooks_count": len(valid_webhooks),
+        "placeholder_webhooks_count": len(placeholder_webhooks),
+        "valid_webhooks": valid_webhooks,
+        "placeholder_webhooks": placeholder_webhooks
     }
 
 
@@ -409,67 +569,10 @@ async def list_instruments():
 @app.get("/logs/{symbol}", response_model=List[dict])
 async def logs(symbol: str, limit: int = 20):
     """Получить последние сигналы в JSON формате"""
-    if symbol != "all" and symbol not in INSTRUMENTS:
-        raise HTTPException(status_code=404, detail=f"Unknown symbol {symbol}")
-
     rows = get_logs(symbol, limit)
-    columns = ["id", "symbol", "data", "status", "created_at", "sent_at", "response_code", "response_text"]
+    columns = ["id", "symbol", "name", "data", "status", "created_at", "sent_at", "response_code", "response_text"]
     results = [dict(zip(columns, row)) for row in rows]
     return results
-
-
-@app.get("/logs/html/{symbol}", response_class=HTMLResponse)
-async def logs_html(symbol: str, limit: int = 20):
-    """Просмотр логов в виде HTML-таблицы"""
-    if symbol != "all" and symbol not in INSTRUMENTS:
-        return HTMLResponse(content=f"<h1>Unknown symbol: {symbol}</h1>")
-
-    rows = get_logs(symbol, limit)
-    columns = ["id", "symbol", "data", "status", "created_at", "sent_at", "response_code", "response_text"]
-
-    html_template = """
-    <html>
-    <head>
-        <title>Webhook Logs</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
-            .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
-            table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #007bff; color: white; font-weight: bold; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            tr:hover { background-color: #f1f1f1; }
-            .success { color: #28a745; font-weight: bold; }
-            .error { color: #dc3545; font-weight: bold; }
-            .info { color: #17a2b8; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h2>📊 Logs for: {symbol}</h2>
-            <p class="info">🔄 Total instruments: {total_count}</p>
-            <table>
-                <tr>{headers}</tr>
-                {rows}
-            </table>
-        </div>
-    </body>
-    </html>
-    """
-
-    headers = "".join(f"<th>{col}</th>" for col in columns)
-    rows_html = "".join(
-        "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
-        for row in rows
-    )
-
-    return HTMLResponse(content=html_template.format(
-        symbol=symbol,
-        total_count=len(INSTRUMENTS),
-        headers=headers,
-        rows=rows_html
-    ))
 
 
 @app.get("/", response_model=dict)
@@ -480,7 +583,9 @@ async def root():
         "version": "1.0",
         "total_instruments": len(INSTRUMENTS),
         "endpoints": {
-            "webhook": "POST /webhook/{symbol}",
+            "universal_webhook": "POST /webhook (для всех инструментов)",
+            "webhook_with_symbol": "POST /webhook/{symbol} (для обратной совместимости)",
+            "test_webhook": "POST /test-webhook/{symbol}",
             "logs": "GET /logs/{symbol}",
             "webhooks_list": "GET /webhooks",
             "instruments_list": "GET /instruments",
@@ -494,11 +599,17 @@ async def root():
 @app.get("/health", response_model=dict)
 async def health_check():
     """Health check endpoint для мониторинга"""
+    active_queues = len([q for q in queues.values() if not q.empty()])
+    placeholder_count = len([url for url in FINANDY_WEBHOOKS.values()
+                             if "PLACEHOLDER" in url or "XXXXXXXX" in url])
+
     return {
         "status": "healthy",
         "timestamp": time.time(),
         "instruments_loaded": len(INSTRUMENTS),
-        "queues_active": len([q for q in queues.values() if not q.empty()])
+        "queues_active": active_queues,
+        "placeholder_webhooks": placeholder_count,
+        "valid_webhooks": len(INSTRUMENTS) - placeholder_count
     }
 
 
