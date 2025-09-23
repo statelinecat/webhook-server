@@ -1,7 +1,7 @@
 import asyncio
 from typing import Dict, Any
-from config import webhooks
-from core.exceptions import QueueNotFoundException
+from src.config import webhooks
+from src.core import QueueNotFoundException
 
 
 class QueueManager:

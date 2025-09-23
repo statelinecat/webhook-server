@@ -1,11 +1,11 @@
 import asyncio
 import time
-from typing import Dict, Any
-from config.settings import settings
-from config import webhooks
-from database.repository import SignalRepository
-from services.webhook_service import WebhookClient
-from core.exceptions import WebhookSendException
+from typing import Dict
+from src.config.settings import settings
+from src.config import webhooks
+from src.database import SignalRepository
+from src.services.webhook_service import WebhookClient
+from src.core import WebhookSendException
 
 
 class SignalWorker:

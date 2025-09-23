@@ -1,7 +1,7 @@
 import httpx
 from typing import Tuple
-from config.settings import settings
-from core.exceptions import WebhookSendException
+from src.config.settings import settings
+from src.core import WebhookSendException
 
 
 class WebhookClient:

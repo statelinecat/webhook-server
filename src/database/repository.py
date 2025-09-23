@@ -1,6 +1,6 @@
 import sqlite3
 from typing import List, Optional
-from config.settings import settings
+from src.config.settings import settings
 
 
 class SignalRepository:

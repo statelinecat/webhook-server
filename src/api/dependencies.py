@@ -1,8 +1,8 @@
-from config.settings import settings
-from config import webhooks
-from database.repository import SignalRepository
-from services.queue_service import QueueManager
-from services.webhook_service import WebhookClient
+from src.config.settings import settings
+from src.config import webhooks
+from src.database import SignalRepository
+from src.services import QueueManager
+from src.services import WebhookClient
 
 # Dependency injections
 def get_settings():
