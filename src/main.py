@@ -4,13 +4,13 @@ import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from config.settings import settings
-from config import webhooks
-from database.repository import SignalRepository
-from services.queue_service import QueueManager
-from services.webhook_service import WebhookClient
-from services.worker_service import SignalWorker
-from api.endpoints import router as api_router
+from .config.settings import settings
+from .config import webhooks
+from .database.repository import SignalRepository
+from .services.queue_service import QueueManager
+from .services.webhook_service import WebhookClient
+from .services.worker_service import SignalWorker
+from .api.endpoints import router as api_router
 
 
 def handle_shutdown(signum, frame):

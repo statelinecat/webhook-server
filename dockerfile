@@ -1,6 +1,5 @@
 FROM python:3.11-slim
 
-# Установка системных зависимостей
 RUN apt-get update && apt-get install -y \
     gcc \
     curl \
@@ -14,10 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./src/
 
-# Создание директорий
 RUN mkdir -p data logs
 
 EXPOSE 8001
 
-# Правильный запуск - используем модуль src
+# Должно быть так:
 CMD ["python", "-m", "src.main"]
