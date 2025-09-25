@@ -8,12 +8,12 @@ services:
     environment:
       - DB_PATH=/app/data/signals.db
     volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
+      - ./data:/app/data        # ← локальная папка ./data → /app/data в контейнере
+      - ./logs:/app/logs        # ← локальная папка ./logs → /app/logs в контейнере
     env_file:
       - .env
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; r = requests.get('http://localhost:8001/api/v1/health', timeout=2); print(r.status_code); exit(0 if r.status_code == 200 else 1)"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3

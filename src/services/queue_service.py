@@ -1,31 +1,34 @@
 import asyncio
 from typing import Dict, Any
-from config import webhooks
+from config.webhooks import get_supported_instruments  # ✅ Правильный импорт
 from core.exceptions import QueueNotFoundException
 
 
 class QueueManager:
-    """Менеджер очередей для каждого инструмента"""
+    """Менеджер очередей для обработки сигналов"""
 
     def __init__(self):
         self.queues: Dict[str, asyncio.Queue] = {}
         self._init_queues()
 
     def _init_queues(self) -> None:
-        """Инициализировать очереди для всех инструментов"""
-        for symbol in webhooks.get_supported_instruments():
+        """Инициализация очередей для всех инструментов"""
+        for symbol in get_supported_instruments():  # ✅ Теперь функция доступна
             self.queues[symbol] = asyncio.Queue()
+        print(f"✅ Инициализировано {len(self.queues)} очередей")
 
     async def put(self, symbol: str, item: Any) -> None:
-        """Положить элемент в очередь"""
+        """Добавить элемент в очередь"""
         if symbol not in self.queues:
             raise QueueNotFoundException(f"Queue not found for symbol: {symbol}")
+
         await self.queues[symbol].put(item)
 
     async def get(self, symbol: str) -> Any:
         """Получить элемент из очереди"""
         if symbol not in self.queues:
             raise QueueNotFoundException(f"Queue not found for symbol: {symbol}")
+
         return await self.queues[symbol].get()
 
     def task_done(self, symbol: str) -> None:
@@ -35,4 +38,4 @@ class QueueManager:
 
     def get_active_queues_count(self) -> int:
         """Получить количество активных очередей"""
-        return len([q for q in self.queues.values() if not q.empty()])
+        return len(self.queues)

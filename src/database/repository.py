@@ -1,16 +1,20 @@
 import sqlite3
+import os
 from typing import List, Optional
-from config.settings import settings
 
 
 class SignalRepository:
     """Репозиторий для работы с сигналами в БД"""
 
     def __init__(self, db_path: str = None):
-        self.db_path = db_path or settings.db_path
+        self.db_path = db_path or os.getenv('DB_PATH', '/app/data/signals.db')
+        self.log_limit = int(os.getenv('LOG_LIMIT', '50'))
 
     def init_db(self) -> None:
         """Инициализация базы данных"""
+        # Создаем директорию если не существует
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("""
@@ -47,7 +51,7 @@ class SignalRepository:
     def get_logs(self, symbol: str, limit: int = None) -> List[tuple]:
         """Получение логов из БД"""
         if limit is None:
-            limit = settings.log_limit
+            limit = self.log_limit
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()

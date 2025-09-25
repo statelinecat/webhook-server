@@ -13,9 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./src/
 
-RUN mkdir -p data logs
+RUN mkdir -p /app/data /app/logs
 
-EXPOSE 8001
+# Ключевая строка:
+ENV PYTHONPATH=/app/src
 
-# Должно быть так:
-CMD ["python", "-m", "src.main"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--log-level", "info"]

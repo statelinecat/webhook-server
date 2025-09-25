@@ -1,6 +1,6 @@
 # src/core/__init__.py
-from .models import TradingSignal, WebhookResponse, HealthStatus
-from .exceptions import QueueNotFoundException, WebhookSendException
+from core.models import TradingSignal, WebhookResponse, HealthStatus  # ✅ Без точек
+from core.exceptions import QueueNotFoundException, WebhookSendException  # ✅ Без точек
 
 __all__ = [
     "TradingSignal",

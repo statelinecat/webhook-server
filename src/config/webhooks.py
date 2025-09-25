@@ -91,16 +91,26 @@ FINANDY_WEBHOOKS = {
     "XVGUSDTS": "https://hook.finandy.com/eorucMVltQjPNQn7rlUK"
 }
 
+
 def get_supported_instruments() -> list[str]:
     """Получить список поддерживаемых инструментов"""
     return list(FINANDY_WEBHOOKS.keys())
 
+
 def get_webhook_url(symbol: str) -> str:
     """Получить URL вебхука для символа"""
-    url = FINANDY_WEBHOOKS.get(symbol)
-    if not url or "PLACEHOLDER" in url or "XXXXXXXX" in url:
-        return f"https://hook.finandy.com/PLACEHOLDER_{symbol}"
+    normalized = symbol.strip().upper()   # ✨ нормализация
+    url = FINANDY_WEBHOOKS.get(normalized)
+
+    if not url:
+        print(f"[webhooks.py] ⚠️ Символ '{symbol}' (нормализован: '{normalized}') не найден в FINANDY_WEBHOOKS")
+        return None
+
+    if "PLACEHOLDER" in url or "XXXXXXXX" in url:
+        return f"https://hook.finandy.com/PLACEHOLDER_{normalized}"
+
     return url
+
 
 def is_valid_webhook(url: str) -> bool:
     """Проверить, является ли вебхук валидным (не заглушкой)"""
